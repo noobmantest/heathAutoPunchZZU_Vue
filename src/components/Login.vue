@@ -1,7 +1,7 @@
 <template>
   <div id="addUser">
     <h1>
-      添加自动打卡账号
+      郑州大学数据平台自动健康打卡系统
     </h1>
 
     <el-form ref="form" :model="form" label-width="100px">
@@ -12,13 +12,18 @@
         <el-input type="password" v-model="form.password"></el-input>
       </el-form-item>
 
-      <el-form-item label="邮箱" placeholder="邮箱用于每日健康打卡提醒">
-        <el-input v-model="form.email"></el-input>
+      <el-form-item label="邮箱">
+        <el-input v-model="form.email" placeholder="邮箱用于每日健康打卡提醒"></el-input>
       </el-form-item>
-      <!--      <el-form-item label="打卡天数">
-        <el-input v-model="form.password"></el-input>
-      </el-form-item> -->
 
+      <el-form-item label="选择所在地市">
+        <el-autocomplete v-model="state" :fetch-suggestions="querySearchAsync" placeholder="输入搜索,参考下图位置1"
+          @select="handleSelect">
+        </el-autocomplete>
+      </el-form-item>
+      <el-form-item label="详细地址">
+        <el-input v-model="form.address" placeholder="输入您的详细地址图下如位置2"></el-input>
+      </el-form-item>
       <el-form-item label="体验打卡天数">
         <el-select v-model="form.days" placeholder="请选择体验打卡天数">
           <el-option label="10天" value="10"></el-option>
@@ -32,15 +37,20 @@
       </el-form-item> -->
 
       <el-form-item>
-        <el-button type="primary" @click="onSubmit">立即创建</el-button>
+        <el-button type="primary" @click="onSubmit">立即体验</el-button>
         <el-button type="primary" @click="findUser">我已经添加了账号</el-button>
       </el-form-item>
     </el-form>
 
-    <div id="" style="padding-top: 100px;">
-      <el-col :span="100">
+    <div id="" style="padding-top: 70px;">
+      <el-col style="padding: 1.25rem;">
+        <img src="../../static/image/position.png" >
+      </el-col>
+      <el-col>
         <el-card shadow="always">
+          <h2>默认其他位置填报为否,如有特殊情况请手动更改</h2>
           <h2>邮箱用于提醒每日打卡情况，请及时关注</h2>
+          <h2>体验之余GitHub上记得帮我点一下star哦，请及时关注</h2>
           <h2>
             <a href="https://github.com/noobmantest">github：https://github.com/noobmantest</a>
           </h2>
@@ -61,12 +71,16 @@
           password: '',
           email: '',
           days: '',
-        }
+          address: '',
+          city_code: '',
+        },
+        restaurants: [],
+        state: '',
+        timeout: null
       }
     },
     mounted() {
-      // location.reload()
-
+      this.restaurants = this.loadAll();
     },
     methods: {
       onSubmit() {
@@ -80,11 +94,16 @@
           this.$message('账号不能为空')
         } else if (!reg.test(form.email)) {
           this.$message('请检查邮箱格式是否正确')
+        } else if (form.address == '') {
+          this.$message('详细地址不能为空')
+        } else if (form.city_code == '') {
+          this.$message('地市不可为空')
         } else {
           console.log('总体合法')
           console.log('submit!')
           let url = this.Global.host + 'insertUser?' + 'user=' + this.form.user +
-            '&password=' + this.form.password + '&days=' + this.form.days + '&today=1&email=' + this.form.email;
+            '&password=' + this.form.password + '&days=' + this.form.days + '&today=1&email=' + this.form.email +
+            '&address=' + this.form.address + '&city_code=' + this.form.city_code;
           console.log(url);
           axios.get(url).then(
             response => {
@@ -109,6 +128,34 @@
       findUser() {
         this.$router.push('findUser')
         // this.$router.push('/MyCar');
+      },
+      loadAll() {
+        return this.Global.province;
+      },
+      querySearchAsync(queryString, cb) {
+        var restaurants = this.restaurants;
+        var results = queryString ? restaurants.filter(this.createStateFilter(queryString)) : restaurants;
+
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(() => {
+          cb(results);
+        }, 3000 * Math.random());
+      },
+      createStateFilter(queryString) {
+        return (state) => {
+          return (state.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0);
+        };
+      },
+      handleSelect(item) {
+        console.log(item);
+        console.log(item.address)
+        console.log(item.value)
+        let provinceCode = item.address
+        console.log(provinceCode.slice(0, 2))
+        console.log(provinceCode.slice(0, 4))
+        this.form.city_code = item.address
+
+
       }
     },
   }
@@ -116,11 +163,13 @@
 <style>
   #addUser {
     box-shadow: 0 0 100px rgba(0, 0, 0, .08);
-    padding: 5%;
+    padding: 2% 5%;
     /* margin: -160px 0 0 -160px; */
     /* border-radius: 4px; */
     /* position: absolute; */
     text-align: center;
+    margin-left: 2%;
+    width: 90%;
     /*    width: 80%;
     height: 100%;
     padding: 32px;

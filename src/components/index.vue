@@ -1,183 +1,179 @@
 <template>
-  <div>
-    <!-- <div>
-      <div style="float: left;width: 80%;">
-        <el-input v-model="value" placeholder="请输入内容"></el-input>
-      </div>
-      <div style="float: left;width: 10%;">
-        <el-button type=" primary" icon="el-icon-search">
-        </el-button>
-      </div>
-    </div> -->
-    <div>
-      <!-- 不能识别部分 -->
-      <div class="showCar" v-for="(p, index) in noShiBie" :key="index">
-        <div class="left">
-          <div>
-            <p>车牌号：</p>
-            <span>{{p.chepai}}</span>
-          </div>
-          <div>
-            <p>位置：</p>
-            <span>{{p.position}}</span>
-          </div>
-        </div>
-        <div class="right">
-          <a :href="p.href">
-            <img width="300px" :src="p.id" />
-          </a>
-        </div>
-      </div>
-    </div>
-    <div style="">
+  <div id="addUser">
+    <h1>
+      郑州大学数据平台自动健康打卡系统
+    </h1>
 
-      <!-- 搜索 -->
-      <div class="showCar" v-for="(p, index) in searchRes" :key="index">
-        <div class="left">
-          <div>
-            <p>车牌号：</p>
-            <span>{{p.chepai}}</span>
-          </div>
-          <div>
-            <p>位置：</p>
-            <span>{{p.position}}</span>
-          </div>
-        </div>
-        <div class="right">
-          <!-- ../../static/findPosition.html -->
-          <a :href="p.href">
-            <img width="300px" :src="p.id" />
-          </a>
-        </div>
-      </div>
+    <el-form ref="form" :model="form" label-width="100px">
+      <el-form-item label="账号">
+        <el-input v-model="form.user"></el-input>
+      </el-form-item>
+      <el-form-item label="密码">
+        <el-input type="password" v-model="form.password"></el-input>
+      </el-form-item>
+
+      <el-form-item label="邮箱">
+        <el-input v-model="form.email" placeholder="邮箱用于每日健康打卡提醒"></el-input>
+      </el-form-item>
+
+      <el-form-item label="选择所在地市">
+        <el-autocomplete v-model="state" :fetch-suggestions="querySearchAsync" placeholder="输入搜索,参考下图位置1"
+          @select="handleSelect">
+        </el-autocomplete>
+      </el-form-item>
+      <el-form-item label="详细地址">
+        <el-input v-model="form.address" placeholder="输入您的详细地址图下如位置2"></el-input>
+      </el-form-item>
+      <el-form-item label="体验打卡天数">
+        <el-select v-model="form.days" placeholder="请选择体验打卡天数">
+          <el-option label="10天" value="10"></el-option>
+          <el-option label="20天" value="20"></el-option>
+          <el-option label="30天" value="30"></el-option>
+        </el-select>
+      </el-form-item>
+
+      <!--      <el-form-item label="即时配送">
+        <el-switch v-model="form.delivery"></el-switch>
+      </el-form-item> -->
+
+      <el-form-item>
+        <el-button type="primary" @click="onSubmit">立即体验</el-button>
+        <el-button type="primary" @click="findUser">我已经添加了账号</el-button>
+      </el-form-item>
+    </el-form>
+
+    <div id="" style="padding-top: 70px;">
+      <el-col style="padding: 1.25rem;">
+        <img src="../../static/image/position.png" >
+      </el-col>
+      <el-col>
+        <el-card shadow="always">
+          <h2>默认其他位置填报为否,如有特殊情况请手动更改</h2>
+          <h2>邮箱用于提醒每日打卡情况，请及时关注</h2>
+          <h2>体验之余GitHub上记得帮我点一下star哦，请及时关注</h2>
+          <h2>
+            <a href="https://github.com/noobmantest">github：https://github.com/noobmantest</a>
+          </h2>
+          <h3>联系我: noobmantest@163.com</h3>
+        </el-card>
+      </el-col>
     </div>
   </div>
-
 </template>
 
 <script>
-  import {
-    Toast
-  } from 'mint-ui'
   import axios from 'axios'
-
   export default {
-    watch: {
-      value: function(value) {
-        console.log(value)
-        let reg = new RegExp(value)
-        if (value === '') {
-          this.searchRes = []
-        } else {
-          for (let i = 0; i < this.findAllRes.length; i++) {
-            if (this.findAllRes[i].chepai.match(reg)) {
-              this.searchRes.push(this.findAllRes[i])
-            }
-          }
-        }
+    data() {
+      return {
+        form: {
+          user: '',
+          password: '',
+          email: '',
+          days: '',
+          address: '',
+          city_code: '',
+        },
+        restaurants: [],
+        state: '',
+        timeout: null
       }
     },
     mounted() {
-      let url = this.Global.host + 'findAll'
-      axios.get(url).then(
-        response => {
-          this.findAllRes = response.data
-        }).catch(error => {
-        console.log(error)
-        alert('请求失败')
-      }).then(() => {
-        for (let i = 0; i < this.findAllRes.length; i++) {
-          this.findAllRes[i].id = 'http://81.70.250.230:8080/download/' + this.findAllRes[i].id
-          this.findAllRes[i].href = '../../static/findPosition.html?position=' + this.findAllRes[i].position.slice(
-            5, 6)
-          if (this.findAllRes[i].chepai === '未能识别') {
-            console.log(this.findAllRes[i].id + '-------' + this.findAllRes[i].position)
-            this.noShiBie.push(this.findAllRes[i])
-            this.findAllRes[i].position = this.findAllRes[i].position.slice(5)
-          } else {
-            this.findAllRes[i].position = this.findAllRes[i].position.slice(5)
-          }
-        }
-        this.noShiBie.push(this.findAllRes[0])
-        this.noShiBie.push(this.findAllRes[1])
-        this.noShiBie.push(this.findAllRes[2])
-        console.log(this.noShiBie)
-      })
-      console.log('mounted执行了。。。。。。。。。。。')
-      this.value = '渝H11557'
-    },
-    updated() {
-      // let imgTag = document.querySelectorAll('#displayImage img')
-      // for (let i = 0; i < this.searchRes; i++) {
-      //   imgTag[i].src = 'http://81.70.250.230:8080/download/' + this.searchRes[i].id
-      //   console.log('更新')
-      // }
-    },
-    data() {
-      return {
-        value: '渝H11557',
-        findAllRes: '',
-        searchRes: [],
-        noShiBie: []
-      }
+      this.restaurants = this.loadAll();
     },
     methods: {
-      testClick() {
-        // Toast('提示信息')
-        Toast({
-          message: '提示',
-          position: 'bottom',
-          duration: 5000
-        })
+      onSubmit() {
+        console.log(this.form)
+        let form = this.form
+        let reg = /^[A-Za-z\d]+([-_.][A-Za-z\d]+)*@([A-Za-z\d]+[-.])+[A-Za-z\d]{2,4}$/
+
+        if (form.user == '') {
+          this.$message('账号不能为空')
+        } else if (form.password == '') {
+          this.$message('账号不能为空')
+        } else if (!reg.test(form.email)) {
+          this.$message('请检查邮箱格式是否正确')
+        } else if (form.address == '') {
+          this.$message('详细地址不能为空')
+        } else if (form.city_code == '') {
+          this.$message('地市不可为空')
+        } else {
+          console.log('总体合法')
+          console.log('submit!')
+          let url = this.Global.host + 'insertUser?' + 'user=' + this.form.user +
+            '&password=' + this.form.password + '&days=' + this.form.days + '&today=1&email=' + this.form.email +
+            '&address=' + this.form.address + '&city_code=' + this.form.city_code;
+          console.log(url);
+          axios.get(url).then(
+            response => {
+              let res = response.data
+              console.log(res)
+              // isPassCount = response.data
+              // console.log(isPassCount)
+              // if (!isPassCount) {
+              //   this.fullscreenLoading = false
+              //   this.$message('账号或密码错误')
+              // }
+            }).catch(error => {
+            console.log(error)
+            this.$message('提交失败，请联系管理员：2039808146@qq.com')
+          }).then(() => {
+            this.$message('提交成功，管理员：2039808146@qq.com')
+            this.$router.push('/findUser')
+          })
+        }
+
+      },
+      findUser() {
+        this.$router.push('findUser')
+        // this.$router.push('/MyCar');
+      },
+      loadAll() {
+        return this.Global.province;
+      },
+      querySearchAsync(queryString, cb) {
+        var restaurants = this.restaurants;
+        var results = queryString ? restaurants.filter(this.createStateFilter(queryString)) : restaurants;
+
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(() => {
+          cb(results);
+        }, 3000 * Math.random());
+      },
+      createStateFilter(queryString) {
+        return (state) => {
+          return (state.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0);
+        };
+      },
+      handleSelect(item) {
+        console.log(item);
+        console.log(item.address)
+        console.log(item.value)
+        let provinceCode = item.address
+        console.log(provinceCode.slice(0, 2))
+        console.log(provinceCode.slice(0, 4))
+        this.form.city_code = item.address
+
+
       }
-    }
+    },
   }
 </script>
-
 <style>
-  .mint-search-list {
-    display: none;
-  }
-
-  .mint-search {
-    height: auto;
-  }
-
-  .showCar {
-    border: 1% solid red;
-  }
-
-  .left {
-    float: left;
-    width: 20%;
-  }
-
-  .left div {
-    /* margin-top: 1.25rem; */
-    color: #ff9955;
-    font-weight: bold;
-  }
-
-  .left span {
-    color: #8A2BE2;
-    font-size: small;
-  }
-
-  .right {
-    width: 78%;
-    height: 11rem;
-    background-color: #ffffff;
-    float: left;
-  }
-
-  .showCar img {
-    width: 300px;
-    /* height: 15.625rem; */
-  }
-
-
-  /* 修改mint-ui 样式 */
-  .mint-header.is-fixed {
-    z-index: 2;
+  #addUser {
+    box-shadow: 0 0 100px rgba(0, 0, 0, .08);
+    padding: 2% 5%;
+    /* margin: -160px 0 0 -160px; */
+    /* border-radius: 4px; */
+    /* position: absolute; */
+    text-align: center;
+    margin-left: 2%;
+    width: 90%;
+    /*    width: 80%;
+    height: 100%;
+    padding: 32px;
+    top: 20%;
+    left: 20px; */
   }
 </style>

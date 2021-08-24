@@ -25,6 +25,10 @@
         </el-table-column>
         <el-table-column label="邮箱" prop="email">
         </el-table-column>
+        <el-table-column label="省市代码" prop="city">
+        </el-table-column>
+        <el-table-column label="详细地址" prop="address">
+        </el-table-column>
         <el-table-column align="right" label="操作">
 
           <template slot-scope="scope">
@@ -37,8 +41,13 @@
     <div id="" style="padding-top: 100px;">
       <el-col :span="100">
         <el-card shadow="always">
-          <h2>编辑删除按钮暂时不可用，期待更新。。。</h2>
-          <h2>个人学习参考github：</h2>
+          <h2>默认其他位置填报为否,如有特殊情况请手动更改</h2>
+          <h2>邮箱用于提醒每日打卡情况，请及时关注</h2>
+          <h2>体验之余GitHub上记得帮我点一下star哦，请及时关注</h2>
+          <h2>
+            <a href="https://github.com/noobmantest">github：https://github.com/noobmantest</a>
+          </h2>
+          <h3>联系我: noobmantest@163.com</h3>
         </el-card>
       </el-col>
     </div>
@@ -62,12 +71,23 @@
         isNoDisplay: false
       }
     },
+    mounted() {
+      console.log(this.get_province)
+    },
     methods: {
       handleEdit(index, row) {
         console.log(index, row);
       },
       handleDelete(index, row) {
         console.log(index, row);
+      },
+      get_province(address) {
+        let province = this.Global.province
+        for (let i = 0; i < province.length; i++) {
+          if (province[i].address == address) {
+            return province.value
+          }
+        }
       },
       findUserByEmail() {
         console.log(this.search)
@@ -86,6 +106,8 @@
                 msg.days = res[i].days
                 msg.today = res[i].today
                 msg.email = res[i].email
+                msg.city = res[i].city_code
+                msg.address = res[i].address
                 this.tableData.push(msg)
               }
             }).catch(error => {
